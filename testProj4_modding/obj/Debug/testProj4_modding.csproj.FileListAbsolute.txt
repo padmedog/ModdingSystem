@@ -1,0 +1,6 @@
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\bin\Debug\testProj4_modding.exe.config
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\bin\Debug\testProj4_modding.exe
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\bin\Debug\testProj4_modding.pdb
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\obj\Debug\testProj4_modding.csprojResolveAssemblyReference.cache
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\obj\Debug\testProj4_modding.exe
+D:\Main\General Programming\csharp\testProj4_modding\testProj4_modding\obj\Debug\testProj4_modding.pdb
