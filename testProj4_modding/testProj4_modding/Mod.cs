@@ -12,7 +12,7 @@ namespace testProj4_modding
     {
         private CompilerResults results;
         private const string EXECUTION_METHOD = "Main";
-        private Dictionary<string, string> localVarList = new Dictionary<string, string>();
+        private Dictionary<string, object> localVarList = new Dictionary<string, object>();
         public Mod(CompilerResults CompilerResults)
         {
             results = CompilerResults;
@@ -33,7 +33,7 @@ namespace testProj4_modding
             }
             return null;
         }
-        public void setLocalVar(string name, string value)
+        public void setLocalVar(string name, object value)
         {
             while(localVarList.ContainsKey(name))
             {
@@ -41,8 +41,7 @@ namespace testProj4_modding
             }
             localVarList.Add(name, value);
         }
-
-        public string getLocalVar(string name)
+        public object getLocalVar(string name)
         {
             if(localVarList.ContainsKey(name))
             {

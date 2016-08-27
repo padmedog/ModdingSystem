@@ -9,9 +9,10 @@ namespace testProj4_modding
 {
     class Program
     {
-        private const string EXECUTION_METHOD = "Main";
+        private const string EXECUTION_METHOD = "Main",
+                             EXECUTION_FILE = "main.cs";
         private static List<Mod> modList;
-        private static Dictionary<string, string> globalVarList = new Dictionary<string, string>();
+        private static Dictionary<string, object> globalVarList = new Dictionary<string, object>();
         static void Main(string[] args)
         {
             Directory.CreateDirectory(@".\mods\");
@@ -19,9 +20,9 @@ namespace testProj4_modding
             modList = new List<Mod>();
             foreach(string path in paths)
             {
-                Console.WriteLine("Executing mod from " + path);
+                Console.WriteLine("Executing mod from " + path + "\\" + EXECUTION_FILE);
                 Mod mod;
-                List<string> result = executeFile(path + @"\main.cs", true, out mod);
+                List<string> result = executeFile(path + "\\" + EXECUTION_FILE, true, out mod);
                 if (result != null)
                 {
                     foreach (string item in result)
@@ -140,15 +141,19 @@ namespace testProj4_modding
                     //we'll execute now
                     CodeDOMProcessor dom = new CodeDOMProcessor();
                     Object[] MethodParams = new Object[] { };
-                    dom.CompileAndExecute(codeFile.Code2Use, codeFile.RefAssemblies, codeFile.MainClassName, EXECUTION_METHOD, out mod);
-
+                    List<string> ret_ = dom.CompileAndExecute(codeFile.Code2Use, codeFile.RefAssemblies, codeFile.MainClassName, EXECUTION_METHOD, out mod);
+                    foreach(string str in ret_)
+                    {
+                        Console.WriteLine(str);
+                    }
+                    Console.WriteLine("--------------");
                     return result;
                 }
             }
             return null;
         }
 
-        public void setGlobalVar(string name, string value)
+        public void setGlobalVar(string name, object value)
         {
             while(globalVarList.ContainsKey(name))
             {
@@ -157,7 +162,7 @@ namespace testProj4_modding
             globalVarList.Add(name, value);
         }
 
-        public string getGlobalVar(string name)
+        public object getGlobalVar(string name)
         {
             if(globalVarList.ContainsKey(name))
             {
