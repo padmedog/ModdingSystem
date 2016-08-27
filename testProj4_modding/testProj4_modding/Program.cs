@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.IO;
 
@@ -9,166 +7,98 @@ namespace testProj4_modding
 {
     class Program
     {
-        private const string EXECUTION_METHOD = "Main",
+        //here are the unchangeable constants that shouldnt be changed
+        public const string EXECUTION_METHOD = "Main",
                              EXECUTION_FILE = "main.cs";
+        //here we do the modification list
         private static List<Mod> modList;
+        //here we make the global variable list
         private static Dictionary<string, object> globalVarList = new Dictionary<string, object>();
         static void Main(string[] args)
         {
+            //make the mods folder if we dont already have it
             Directory.CreateDirectory(@".\mods\");
+            //get all of the paths for each of the folders in the mods folder
             string[] paths = Directory.GetDirectories(@".\mods\", "*", SearchOption.TopDirectoryOnly);
+            //here we create the modification list
             modList = new List<Mod>();
+            //tries to compile and execute each mod
             foreach(string path in paths)
             {
                 Console.WriteLine("Executing mod from " + path + "\\" + EXECUTION_FILE);
                 Mod mod;
-                List<string> result = executeFile(path + "\\" + EXECUTION_FILE, true, out mod);
+                //try to execute the mod
+                List<string> result = CodeFile.executeFile(path + "\\" + EXECUTION_FILE, true, out mod);
+                //if its not null then the mod did something right
                 if (result != null)
                 {
+                    //writes out each result item
                     foreach (string item in result)
                     {
                         Console.WriteLine(" -" + item);
                     }
+                    //adds the mod to the modification list
                     modList.Add(mod);
                 }
                 else
                 {
-                    Console.WriteLine("Failed to execute mod");
+                    //it failed for some reason
+                    //todo: some way to give more detail on the problem
+                    Console.WriteLine("  -Failed to execute mod");
                 }
             }
+            //call the start event of each mod
+            callModEvent("Start");
 
-            foreach (Mod mod in modList)
-            {
-                mod.Execute("Start", new object[] { mod });
-            }
+            //the value that has only 3 options, 0 [17ms], 1 [17ms], or 2 [16ms]
+            //this will make it try to make sure that there is 60 step events per second
+            byte num0 = 0;
             while (true)
             {
-                Thread.Sleep(1000);
-                foreach(Mod mod in modList)
+                if(num0 == 2)
                 {
-                    mod.Execute("Step", new object[] { mod } );
+                    Thread.Sleep(16);
+                    num0 = 0;
                 }
+                else
+                {
+                    Thread.Sleep(17);
+                    num0 += 1;
+                }
+                //call the step event of each modification
+                callModEvent("Step");
             }
         }
-
-        public static List<String> executeFile(string filePath, bool output, out Mod mod)
-        {
-            mod = null;
-            if (File.Exists(filePath))
-            {
-                string[] code = File.ReadAllLines(filePath);
-                string name, module;
-                List<string> constructors, methods, members, fields, properties, result;
-                CodeFile codeFile = new CodeFile();
-                result = codeFile.SetAndCompileCSCode(code, out name, out module, out constructors, out members, out fields, out methods, out properties);
-                if(codeFile.CompiledOK)
-                {
-                    if(output)
-                    {
-                        Console.WriteLine("Name: " + name);
-                        Console.WriteLine("Module: " + module);
-                        if (constructors.Count > 0)
-                        {
-                            if (constructors.Count == 1)
-                                Console.WriteLine("Constructor:");
-                            else
-                                Console.WriteLine("Constructors:");
-                            foreach (string con in constructors)
-                            {
-                                Console.WriteLine(" - " + con);
-                            }
-                        }
-                        else
-                            Console.WriteLine("No constructors");
-                        
-                        if (methods.Count > 0)
-                        {
-                            if (methods.Count == 1)
-                                Console.WriteLine("Method:");
-                            else
-                                Console.WriteLine("Methods:");
-                            foreach (string method in methods)
-                            {
-                                Console.WriteLine(" - " + method);
-                            }
-                        }
-                        else
-                            Console.WriteLine("No methods");
-
-                        if (properties.Count > 0)
-                        {
-                            if (properties.Count == 1)
-                                Console.WriteLine("Property:");
-                            else
-                                Console.WriteLine("Properties:");
-                            foreach (string prop in properties)
-                            {
-                                Console.WriteLine(" - " + prop);
-                            }
-                        }
-                        else
-                            Console.WriteLine("No properties");
-
-                        if (members.Count > 0)
-                        {
-                            if (members.Count == 1)
-                                Console.WriteLine("Member:");
-                            else
-                                Console.WriteLine("Members:");
-                            foreach (string member in members)
-                            {
-                                Console.WriteLine(" - " + member);
-                            }
-                        }
-                        else
-                            Console.WriteLine("No members");
-
-                        if (fields.Count > 0)
-                        {
-                            if (fields.Count == 1)
-                                Console.WriteLine("Field:");
-                            else
-                                Console.WriteLine("Fields:");
-                            foreach (string field in fields)
-                            {
-                                Console.WriteLine(" - " + field);
-                            }
-                        }
-                        else
-                            Console.WriteLine("No fields");
-                    }
-
-                    //we'll execute now
-                    CodeDOMProcessor dom = new CodeDOMProcessor();
-                    Object[] MethodParams = new Object[] { };
-                    List<string> ret_ = dom.CompileAndExecute(codeFile.Code2Use, codeFile.RefAssemblies, codeFile.MainClassName, EXECUTION_METHOD, out mod);
-                    foreach(string str in ret_)
-                    {
-                        Console.WriteLine(str);
-                    }
-                    Console.WriteLine("--------------");
-                    return result;
-                }
-            }
-            return null;
-        }
-
         public void setGlobalVar(string name, object value)
         {
+            //make sure that there is something to change, or just skip ahead to the add
             while(globalVarList.ContainsKey(name))
             {
                 globalVarList.Remove(name);
             }
+            //add the variable when it can
             globalVarList.Add(name, value);
         }
 
         public object getGlobalVar(string name)
         {
+            //makes sure the variable exists
             if(globalVarList.ContainsKey(name))
             {
+                //return the value if it exists
                 return globalVarList[name];
             }
+            //if it doesnt exist return null
             return null;
+        }
+
+        static public void callModEvent(string id)
+        {
+            foreach (Mod mod in modList)
+            {
+                //executes the method of each mod
+                mod.Execute(id, new object[] { mod });
+            }
         }
     }
 }

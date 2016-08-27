@@ -11,8 +11,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.IO;
 using Microsoft.VisualBasic;
 
 namespace testProj4_modding
@@ -412,8 +411,110 @@ namespace testProj4_modding
 
 		}  // END public void Dispose(Boolean pDisposing)
 
-		#endregion IDisposable Implementation======================
+        #endregion IDisposable Implementation======================
 
-	}  // END public class CodeFile
+        public static List<String> executeFile(string filePath, bool output, out Mod mod)
+        {
+            mod = null;
+            if (File.Exists(filePath))
+            {
+                string[] code = File.ReadAllLines(filePath);
+                string name, module;
+                List<string> constructors, methods, members, fields, properties, result;
+                CodeFile codeFile = new CodeFile();
+                result = codeFile.SetAndCompileCSCode(code, out name, out module, out constructors, out members, out fields, out methods, out properties);
+                if (codeFile.CompiledOK)
+                {
+                    if (output)
+                    {
+                        Console.WriteLine("  -Name: " + name);
+                        Console.WriteLine("  -Module: " + module);
+                        if (constructors.Count > 0)
+                        {
+                            if (constructors.Count == 1)
+                                Console.WriteLine("  -Constructor:");
+                            else
+                                Console.WriteLine("  -Constructors:");
+                            foreach (string con in constructors)
+                            {
+                                Console.WriteLine("    - " + con);
+                            }
+                        }
+                        else
+                            Console.WriteLine("  -No constructors");
+
+                        if (methods.Count > 0)
+                        {
+                            if (methods.Count == 1)
+                                Console.WriteLine("  -Method:");
+                            else
+                                Console.WriteLine("  -Methods:");
+                            foreach (string method in methods)
+                            {
+                                Console.WriteLine("    - " + method);
+                            }
+                        }
+                        else
+                            Console.WriteLine("  -No methods");
+
+                        if (properties.Count > 0)
+                        {
+                            if (properties.Count == 1)
+                                Console.WriteLine("  -Property:");
+                            else
+                                Console.WriteLine("  -Properties:");
+                            foreach (string prop in properties)
+                            {
+                                Console.WriteLine("    - " + prop);
+                            }
+                        }
+                        else
+                            Console.WriteLine("  -No properties");
+
+                        if (members.Count > 0)
+                        {
+                            if (members.Count == 1)
+                                Console.WriteLine("  -Member:");
+                            else
+                                Console.WriteLine("  -Members:");
+                            foreach (string member in members)
+                            {
+                                Console.WriteLine("    - " + member);
+                            }
+                        }
+                        else
+                            Console.WriteLine("  -No members");
+
+                        if (fields.Count > 0)
+                        {
+                            if (fields.Count == 1)
+                                Console.WriteLine("  -Field:");
+                            else
+                                Console.WriteLine("  -Fields:");
+                            foreach (string field in fields)
+                            {
+                                Console.WriteLine("    - " + field);
+                            }
+                        }
+                        else
+                            Console.WriteLine("  -No fields");
+                    }
+
+                    //we'll execute now
+                    CodeDOMProcessor dom = new CodeDOMProcessor();
+                    Object[] MethodParams = new Object[] { };
+                    List<string> ret_ = dom.CompileAndExecute(codeFile.Code2Use, codeFile.RefAssemblies, codeFile.MainClassName, Program.EXECUTION_METHOD, out mod);
+                    foreach (string str in ret_)
+                    {
+                        Console.WriteLine(str);
+                    }
+                    Console.WriteLine("  ----");
+                    return result;
+                }
+            }
+            return null;
+        }
+
+    }  // END public class CodeFile
 
 }  // END namespace RunExternal
